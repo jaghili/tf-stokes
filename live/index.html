@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0>
+    <style>
+     body {padding: 0; margin: 0;}
+    </style>
+
+    <!-- JS scripts -->
+    <script src="js/p5.min.js"></script>
+    <script src="js/p5.dom.min.js"></script>
+    <script src="js/math.min.js"></script>
+	
+    <!-- load neural network -->
+    <script src="js/data.js"></script>
+
+    <!-- Function to evalue one solution -->
+    <script>
+     function EvalSol(xl,yl,xr,yr) {
+	 var X = [[xl,yl,xr,yr]];
+	 var y1 = math.tanh(math.add(math.multiply(X, w1),b1))
+	 var y2 = math.tanh(math.add(math.multiply(y1,w2),b2))
+	 var y3 = math.tanh(math.add(math.multiply(y2,w3),b3))
+	 var y4 = math.tanh(math.add(math.multiply(y3,w4),b4))
+	 var y5 = math.tanh(math.add(math.multiply(y4,w5),b5))
+	 var y6 = math.tanh(math.add(math.multiply(y5,w6),b6))
+	 var y7 = math.tanh(math.add(math.multiply(y6,w7),b7))
+	 var yhat =  math.tanh(math.add(math.multiply(y7,w8),b8));
+	 return yhat;
+     }
+    </script>
+
+    <!-- load FVCA5 Mesh  -->
+    <script src="js/mesh.js"></script>
+    
+    <script>
+     var Scale = 800;
+     function setup() {
+	 Sliderxl = createSlider(0,  2, 1, 0.01); // a, b, starting value, increment
+	 Slideryl = createSlider(-1, 2, 1, 0.01);
+	 Sliderxr = createSlider(-1, 1, 1, 0.01);
+	 Slideryr = createSlider(-1, 2, 1, 0.01);
+
+	 Sliderxl.style('width', '500px');
+	 Slideryl.style('width', '500px');
+	 Sliderxr.style('width', '500px');
+	 Slideryr.style('width', '500px');
+
+	 // left
+	 Sliderxl.position(10, Scale);
+	 Slideryl.position(10, Scale+20);
+	 // right
+	 Sliderxr.position(10, Scale+40);
+	 Slideryr.position(10, Scale+60);
+	 
+	 createCanvas(2*Scale, Scale);
+     }
+
+     var UX, UY, P, Pmin, Pmax;
+     var sol;
+     function draw() {
+	 clear();
+	 fill(0, 0, 0,);
+	 stroke(0,0,0);
+	 
+	 text("left", Scale + 20, 10);
+	 text(Sliderxl.value(), Scale + 100, 10);
+	 text(Slideryl.value(), Scale + 150, 10);
+
+	 text("right", Scale + 20, 20);
+	 text(Sliderxr.value(), Scale + 100, 20);
+	 text(Slideryr.value(), Scale + 150, 20);
+	 
+	 sol = EvalSol(
+	     Sliderxl.value(),
+	     Slideryl.value(),
+	     Sliderxr.value(),
+	     Slideryr.value()
+	 );
+	 
+	 UX = sol[0].slice(0, np);
+	 UY = sol[0].slice(np, 2*np);
+	 
+	 /* 	   	    
+	    // draw mesh
+	    for (var iP = 0; iP < cc.length; iP++) {
+	    // draw shape
+	    beginShape();
+	    //var p = P[iP]/(Pmax-Pmin);
+	    var p = math.sqrt( UX[iP]*UX[iP] + UY[iP]*UY[iP]) / Umax;
+	    fill(120 * p + (1-p) * 255 , (1-p) * 255 , (1-p) * 255);
+	    stroke(200,200,200);
+	    for (iV = 0; iV < cx[iP].length; iV++) {
+	    vertex(Scale * cx[iP][iV], Scale - Scale * cy[iP][iV]);
+	    }
+	    endShape(CLOSE);
+	    }*/
+
+	 // draw vector field
+	 for (var iP = 0; iP < dofs.length; iP++) {	 
+	     var hyp = math.sqrt( UX[iP]*UX[iP] + UY[iP]*UY[iP]);	     
+	     var ux = 50 * UX[iP];
+	     var uy = 50 * UY[iP];
+	     stroke (0, 0, 0)
+	     line( Scale * dofs[iP][0],
+		   Scale * (1-dofs[iP][1]),
+		   Scale * dofs[iP][0] + ux,
+		   Scale - Scale * dofs[iP][1] - uy
+	     );
+	     
+	     ellipse(Scale * dofs[iP][0], Scale - Scale * dofs[iP][1], 2);
+	 } 
+     } 
+    </script>  
+  </head>
+  <body>
+  </body>
+</html>
